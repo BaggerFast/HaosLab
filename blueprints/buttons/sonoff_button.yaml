@@ -1,0 +1,62 @@
+blueprint:
+  name: Sonoff Button
+  description: Control single, double, and long clicks for a Sonoff button
+  domain: automation
+  author: BaggerFast
+  input:
+    button_device:
+      name: Switch
+      selector:
+        device:
+          filter:
+            integration: mqtt
+            manufacturer: SONOFF
+            model: Wireless button
+    button_single:
+      name: Single action
+      default: []
+      selector:
+        action: {}
+    button_double:
+      name: Double action
+      default: []
+      selector:
+        action: {}
+    button_long:
+      name: Long action
+      default: []
+      selector:
+        action: {}
+mode: queued
+max_exceeded: silent
+
+triggers:
+  - trigger: device
+    device_id: !input button_device
+    domain: mqtt
+    type: action
+    subtype: single
+  - trigger: device
+    device_id: !input button_device
+    domain: mqtt
+    type: action
+    subtype: double
+  - trigger: device
+    device_id: !input button_device
+    domain: mqtt
+    type: action
+    subtype: long
+action:
+  - variables:
+      key: "{{ trigger.payload }}"
+  - choose:
+      - conditions:
+          - '{{ key == "single" }}'
+        sequence: !input button_single
+      - conditions:
+          - '{{ key == "double" }}'
+        sequence: !input button_double
+      - conditions:
+          - '{{ key == "long" }}'
+        sequence: !input button_long
+
