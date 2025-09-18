@@ -40,7 +40,7 @@ triggers:
     
 action:
   - variables:
-      key: "{{ trigger.subtype }}"
+      key: "{{ trigger.payload }}"
   - choose:
       - conditions: "{{ key == 'single' }}"
         sequence: !input single
