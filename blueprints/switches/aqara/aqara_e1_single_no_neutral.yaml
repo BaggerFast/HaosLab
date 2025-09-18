@@ -1,0 +1,48 @@
+blueprint:
+  name: Aqara E1 single switch no neutral
+  description: Сontrol an Aqara E1 single switch (no neutral) via HA. Supports single and double clicks.
+  domain: automation
+  author: BaggerFast
+  input:
+    switch_device:
+      name: Switch
+      selector:
+        device:
+          filter:
+            integration: mqtt
+            manufacturer: Aqara
+            model: Smart wall switch E1 (no neutral, single rocker)
+    single:
+      name: Single action
+      default: []
+      selector:
+        action: {}
+    double:
+      name: Double action
+      default: []
+      selector:
+        action: {}
+
+mode: queued
+max_exceeded: silent
+
+triggers:
+  - platform: device
+    device_id: !input switch_device
+    domain: mqtt
+    type: action
+    subtype: single
+  - platform: device
+    device_id: !input switch_device
+    domain: mqtt
+    type: action
+    subtype: double
+    
+action:
+  - variables:
+      key: "{{ trigger.subtype }}"
+  - choose:
+      - conditions: "{{ key == 'single' }}"
+        sequence: !input single
+      - conditions: "{{ key == 'double' }}"
+        sequence: !input double
