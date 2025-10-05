@@ -1,0 +1,115 @@
+blueprint:
+  name: Xiaomi Button
+  description: Control single, double, triple, quadruple, many, hold and release actions for a Xiaomi button
+  domain: automation
+  author: BaggerFast
+  input:
+    button_device:
+      name: Button
+      selector:
+        device:
+          filter:
+            integration: mqtt
+            manufacturer: Xiaomi
+            model: Mi wireless switch
+    button_single:
+      name: Single action
+      default: []
+      selector:
+        action: {}
+    button_double:
+      name: Double action
+      default: []
+      selector:
+        action: {}
+    button_triple:
+      name: Triple action
+      default: []
+      selector:
+        action: {}
+    button_quadruple:
+      name: Quadruple action
+      default: []
+      selector:
+        action: {}
+    button_many:
+      name: Many action
+      default: []
+      selector:
+        action: {}
+    button_hold:
+      name: Hold action
+      default: []
+      selector:
+        action: {}
+    button_release:
+      name: Release action
+      default: []
+      selector:
+        action: {}
+
+mode: queued
+max_exceeded: silent
+
+triggers:
+  - trigger: device
+    device_id: !input button_device
+    domain: mqtt
+    type: action
+    subtype: single
+  - trigger: device
+    device_id: !input button_device
+    domain: mqtt
+    type: action
+    subtype: double
+  - trigger: device
+    device_id: !input button_device
+    domain: mqtt
+    type: action
+    subtype: triple
+  - trigger: device
+    device_id: !input button_device
+    domain: mqtt
+    type: action
+    subtype: quadruple
+  - trigger: device
+    device_id: !input button_device
+    domain: mqtt
+    type: action
+    subtype: many
+  - trigger: device
+    device_id: !input button_device
+    domain: mqtt
+    type: action
+    subtype: hold
+  - trigger: device
+    device_id: !input button_device
+    domain: mqtt
+    type: action
+    subtype: release
+
+action:
+  - variables:
+      key: "{{ trigger.payload }}"
+  - choose:
+      - conditions:
+          - '{{ key == "single" }}'
+        sequence: !input button_single
+      - conditions:
+          - '{{ key == "double" }}'
+        sequence: !input button_double
+      - conditions:
+          - '{{ key == "triple" }}'
+        sequence: !input button_triple
+      - conditions:
+          - '{{ key == "quadruple" }}'
+        sequence: !input button_quadruple
+      - conditions:
+          - '{{ key == "many" }}'
+        sequence: !input button_many
+      - conditions:
+          - '{{ key == "hold" }}'
+        sequence: !input button_hold
+      - conditions:
+          - '{{ key == "release" }}'
+        sequence: !input button_release
