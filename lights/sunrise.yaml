@@ -1,0 +1,126 @@
+blueprint:
+  name: 🌅 Sunrise Simulation (Percent Brightness & Kelvin)
+  author: BaggerFast
+  description: >
+    Creates a sunrise effect by gradually increasing brightness (1-100%) and changing color temperature (Kelvin).
+    You can set custom triggers, conditions, brightness range, color temperature range,
+    duration in minutes, and actions before/after the sunrise.
+  domain: automation
+  input:
+    custom_triggers:
+      name: ⏰ Custom Triggers
+      default: []
+      selector:
+        trigger: {}
+    custom_conditions:
+      name: ⚙️ Custom Conditions
+      default: []
+      selector:
+        condition: {}
+    light_entity:
+      name: Light
+      selector:
+        entity:
+          filter:
+            domain: light
+          multiple: false
+    brightness_start:
+      name: Minimum Brightness (%)
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          mode: slider
+    brightness_end:
+      name: Maximum Brightness (%)
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          mode: slider
+    kelvin_start:
+      name: Warmest Color (Start of Sunrise)
+      default: 2000
+      selector:
+        number:
+          min: 2000
+          max: 8000
+          step: 50
+          unit_of_measurement: K
+          mode: slider
+    kelvin_end:
+      name: Coolest Color (End of Sunrise)
+      default: 5000
+      selector:
+        number:
+          min: 2000
+          max: 8000
+          step: 50
+          unit_of_measurement: K
+          mode: slider
+    sunrise_duration:
+      name: ⏱️ Sunrise Duration (minutes)
+      default: 20
+      selector:
+        number:
+          min: 1
+          max: 60
+          step: 1
+          unit_of_measurement: min
+          mode: slider
+    pre_sunrise_actions:
+      name: 🔸 Actions Before Sunrise
+      default: []
+      selector:
+        action: {}
+    post_sunrise_actions:
+      name: 🔹 Actions After Sunrise
+      default: []
+      selector:
+        action: {}
+trigger: !input custom_triggers
+condition: !input custom_conditions
+action:
+  - variables:
+      light: !input light_entity
+      brightness_start: !input brightness_start
+      brightness_end: !input brightness_end
+      brightness_range: "{{ float(brightness_end) - float(brightness_start) }}"
+      kelvin_start: !input kelvin_start
+      kelvin_end: !input kelvin_end
+      kelvin_range: "{{ float(kelvin_end) - float(kelvin_start) }}"
+      sunrise_duration_minutes: !input sunrise_duration
+      sunrise_duration_seconds: "{{ (float(sunrise_duration_minutes) * 60) | int }}"
+      tick_time: "{{ sunrise_duration_seconds / brightness_range }}"
+  - sequence: !input pre_sunrise_actions
+  - action: light.turn_on
+    target:
+      entity_id: !input light_entity
+  - wait_for_trigger:
+      - trigger: state
+        entity_id: !input light_entity
+        to: "on"
+  - repeat:
+      while:
+        - condition: template
+          value_template: >
+            {{ states(light) != 'off' and brightness_start + repeat.index <= brightness_end }}
+      sequence:
+        - variables:
+            brightness: "{{ brightness_start + repeat.index }}"
+            progress: "{{ (brightness - brightness_start) / brightness_range }}"
+            color_temp_kelvin: "{{ (kelvin_start + progress * kelvin_range) | int }}"
+        - action: light.turn_on
+          data:
+            brightness_pct: "{{ brightness | int }}"
+            kelvin: "{{ color_temp_kelvin | int }}"
+          target:
+            entity_id: !input light_entity
+        - delay: "{{ tick_time | float }}"
+  - sequence: !input post_sunrise_actions
+mode: single
+max_exceeded: silent
