@@ -1,10 +1,11 @@
 blueprint:
-  name: 🌅 Sunrise Simulation (Percent Brightness & Kelvin)
+  name: "\U0001F305 Sunrise Simulation (Percent Brightness & Kelvin)"
   author: BaggerFast
-  description: >
-    Creates a sunrise effect by gradually increasing brightness (1-100%) and changing color temperature (Kelvin).
-    You can set custom triggers, conditions, brightness range, color temperature range,
-    duration in minutes, and actions before/after the sunrise.
+  description:
+    "Creates a sunrise effect by gradually increasing brightness (1-100%)
+    and changing color temperature (Kelvin). You can set custom triggers, conditions,
+    brightness range, color temperature range, duration in minutes, and actions before/after
+    the sunrise."
   domain: automation
   input:
     custom_triggers:
@@ -22,34 +23,35 @@ blueprint:
       selector:
         entity:
           filter:
-            domain: light
+            - domain:
+                - light
           multiple: false
     brightness_start:
       name: Minimum Brightness (%)
       default: 1
       selector:
         number:
-          min: 1
-          max: 100
-          step: 1
+          min: 1.0
+          max: 100.0
+          step: 1.0
           mode: slider
     brightness_end:
       name: Maximum Brightness (%)
       default: 100
       selector:
         number:
-          min: 1
-          max: 100
-          step: 1
+          min: 1.0
+          max: 100.0
+          step: 1.0
           mode: slider
     kelvin_start:
       name: Warmest Color (Start of Sunrise)
       default: 2000
       selector:
         number:
-          min: 2000
-          max: 8000
-          step: 50
+          min: 2000.0
+          max: 8000.0
+          step: 50.0
           unit_of_measurement: K
           mode: slider
     kelvin_end:
@@ -57,9 +59,9 @@ blueprint:
       default: 5000
       selector:
         number:
-          min: 2000
-          max: 8000
-          step: 50
+          min: 2000.0
+          max: 8000.0
+          step: 50.0
           unit_of_measurement: K
           mode: slider
     sunrise_duration:
@@ -67,21 +69,22 @@ blueprint:
       default: 20
       selector:
         number:
-          min: 1
-          max: 60
-          step: 1
+          min: 1.0
+          max: 60.0
+          step: 1.0
           unit_of_measurement: min
           mode: slider
     pre_sunrise_actions:
-      name: 🔸 Actions Before Sunrise
+      name: "\U0001F538 Actions Before Sunrise"
       default: []
       selector:
         action: {}
     post_sunrise_actions:
-      name: 🔹 Actions After Sunrise
+      name: "\U0001F539 Actions After Sunrise"
       default: []
       selector:
         action: {}
+  source_url: https://github.com/BaggerFast/HaosLab/blob/main/blueprints/lights/sunrise.yaml
 trigger: !input custom_triggers
 condition: !input custom_conditions
 action:
@@ -104,11 +107,12 @@ action:
       - trigger: state
         entity_id: !input light_entity
         to: "on"
+    timeout: "00:00:05"
+    continue_on_timeout: false
   - repeat:
       while:
         - condition: template
-          value_template: >
-            {{ states(light) != 'off' and brightness_start + repeat.index <= brightness_end }}
+          value_template: "{{ is_state(light, 'on') and brightness_start + repeat.index <= brightness_end }}"
       sequence:
         - variables:
             brightness: "{{ brightness_start + repeat.index }}"
@@ -117,10 +121,11 @@ action:
         - action: light.turn_on
           data:
             brightness_pct: "{{ brightness | int }}"
-            kelvin: "{{ color_temp_kelvin | int }}"
+            color_temp_kelvin: "{{ color_temp_kelvin | int }}"
           target:
             entity_id: !input light_entity
         - delay: "{{ tick_time | float }}"
   - sequence: !input post_sunrise_actions
 mode: single
 max_exceeded: silent
+
